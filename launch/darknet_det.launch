@@ -1,0 +1,37 @@
+<launch>
+
+  <arg name="output" default="screen" />
+  <arg name="visualize" default="false" />
+  <arg name="camera_name" default="camera" />
+  <arg name="image_topic" default="image_raw" />
+  <arg name="det_topic" default="det" />
+  <arg name="det_image_topic" default="det_image" />
+  <arg name="det_overlay_topic" default="det_overlay" />
+  <arg name="cfg_file" default="$(find darknet_det)/models/yolov3.cfg" />
+  <arg name="weights_file" default="$(find darknet_det)/models/yolov3.weights" />
+  <arg name="names_file" default="$(find darknet_det)/models/coco.names" />
+
+  <group ns="$(arg camera_name)">
+
+    <node pkg="darknet_det" type="darknet_det_node" name="detection" output="$(arg output)">
+      <param name="cfg_file" value="$(arg cfg_file)" />
+      <param name="weights_file" value="$(arg weights_file)" />
+      <param name="names_file" value="$(arg names_file)" />
+      <param name="gpu_index" value="0" />
+      <param name="probability_threshold" value="0.5" />
+      <param name="hier_threshold" value="0.5" />
+      <param name="nms_threshold" value="0.45" />
+      <rosparam>class_ids: [ 0 ]</rosparam>
+      <remap from="image" to="$(arg image_topic)" />
+      <remap from="det" to="$(arg det_topic)" />
+      <remap from="det_image" to="$(arg det_image_topic)" />
+      <remap from="det_overlay" to="$(arg det_overlay_topic)" />
+    </node>
+
+    <node pkg="image_view" type="image_view" name="detection_view" if="$(arg visualize)">
+      <remap from="image" to="$(arg det_overlay_topic)" />
+    </node>
+
+  </group>
+
+</launch>

@@ -1,0 +1,35 @@
+<launch>
+
+  <arg name="output" default="screen" />
+  <arg name="visualize" default="true" />
+  <arg name="sensor_id" default="0" />
+  <arg name="camera_name" default="csi_cam_$(arg sensor_id)" />
+  <arg name="width" default="1280" />
+  <arg name="height" default="720" />
+  <arg name="fps" default="30" />
+
+  <!-- gscam config -->
+  <env name="GSCAM_CONFIG" value="nvarguscamerasrc sensor-id=$(arg sensor_id) ! 
+    video/x-raw(memory:NVMM), width=(int)$(arg width), height=(int)$(arg height), 
+    format=(string)NV12, framerate=(fraction)$(arg fps)/1 ! nvvidconv flip-method=0 ! 
+    video/x-raw, format=(string)BGRx ! videoconvert" />
+
+  <!-- gscam capture node -->
+  <group ns="$(arg camera_name)">
+    <node pkg="gscam" type="gscam" name="capture" output="$(arg output)">
+      <param name="camera_name" value="$(arg camera_name)" />
+      <param name="frame_id" value="$(arg camera_name)" />
+      <param name="sync_sink" value="true" />
+      <remap from="camera/image_raw" to="image_raw" />
+      <remap from="camera/camera_info" to="camera_info" />
+    </node>
+  </group>
+
+  <!-- darknet detection node -->
+  <include file="$(find darknet_det)/launch/darknet_det.launch">
+    <arg name="output" value="$(arg output)" />
+    <arg name="visualize" value="$(arg visualize)" />
+    <arg name="camera_name" value="$(arg camera_name)" />
+  </include>
+
+</launch>
